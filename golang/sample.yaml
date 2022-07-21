@@ -1,0 +1,12 @@
+service:
+  name: name
+
+server:
+  address: ":8080"
+
+mqtt:
+  broker: "broker.mqttdashboard.com"
+  port: 1883
+  client_id: "client-id"
+  events:
+    calendar: "topic/calendar"
