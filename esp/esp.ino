@@ -35,9 +35,11 @@ int mqttPort = 0;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+int baudRate = 9600;
+
 /*--- SETUP ---*/
 void setup() {
-  Serial.begin(9600); //Inicializa a comunicação serial com taxa de transmissão de 115200 baud rate
+  Serial.begin(baudRate); //Inicializa a comunicação serial com taxa de transmissão de 115200 baud rate
 
   pinMode(LED_BUILTIN, OUTPUT); //Configura o pino do led
   pinMode(LED_BUILTIN_4, OUTPUT); //Configura o pino do led
@@ -181,14 +183,19 @@ void loop() {
     
    
     if (rx_byte == EOF || rx_byte == '\r' || rx_byte == '\n') {
-      delay(1000);
+      
       Serial.print("you typed: ");
       Serial.println(stringOne);
 
       if (stringOne == "reset") {
         resetConfig(SPIFFS);
+      } else if (stringOne == "clear") {
+        Serial.end();
+        Serial.begin(baudRate);
+        Serial.println("Olha aqui");
       } else if (stringOne == "networks") {
         getNetworks();
+        Serial.flush();
       } else {
         if (stringOne != "") {
           String v = stringOne + ";";
