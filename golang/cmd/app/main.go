@@ -77,7 +77,7 @@ func main() {
 
 	internalGoogle.NewGoogle(router, mw, calendarGoogle, service)
 
-	go httpserver.Start()
+	// go httpserver.Start()
 
 	httpserver.Run(
 		httpserver.Config{

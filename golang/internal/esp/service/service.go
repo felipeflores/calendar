@@ -51,6 +51,7 @@ func substr(input string, start int, length int) string {
 
 func (es *EspService) GetNetworks() (model.Wifi, error) {
 	fmt.Println("GetNetworks")
+	time.Sleep(20 * time.Second)
 	err := es.serialService.ReadCommand("networks")
 	if err != nil {
 		return model.Wifi{}, err
