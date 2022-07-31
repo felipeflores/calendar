@@ -65,3 +65,15 @@ func (h *EspHandler) SetNetworks(w http.ResponseWriter, r *http.Request) error {
 	// w.WriteHeader(http.StatusOK)
 	return nil
 }
+
+func (h *EspHandler) GetInfo(w http.ResponseWriter, r *http.Request) error {
+
+	wifi, err := h.es.GetInfo()
+	if err != nil {
+		return err
+	}
+	fmt.Println(fmt.Sprintf("Retorno: %v", wifi))
+	// return ferrors.NewBadRequest(errors.New("Errou aqui"))
+	// w.WriteHeader(http.StatusOK)
+	return rest.SendJSON(w, wifi)
+}

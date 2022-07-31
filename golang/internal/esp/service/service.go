@@ -17,6 +17,8 @@ type Control string
 const (
 	START_WIFI Control = "START_WIFI"
 	END_WIFI   Control = "END_WIFI"
+	START_INFO Control = "START_INFO"
+	END_INFO   Control = "END_INFO"
 )
 
 type EspService struct {
@@ -90,6 +92,71 @@ func (es *EspService) GetNetworks() (model.Wifi, error) {
 				fmt.Println("errou")
 				return model.Wifi{}, err
 			}
+
+			// wifi = model.Wifi{
+			// 	IndexStart: indexStart,
+			// 	IndexEnd:   indexEnd,
+			// 	Valor:      substr(buf, indexStart, indexEnd),
+			// 	Output:     buf,
+			// }
+
+			startBuf := substr(buf, 0, indexStart)
+			endBuf := substr(buf, indexEnd+8, len(buf))
+
+			var sb = strings.Builder{}
+			sb.WriteString(startBuf)
+			sb.WriteString(endBuf)
+
+			es.serialService.SetBuffer("")
+
+			break
+		}
+		time.Sleep(time.Second * 5)
+	}
+
+	return wifi, nil
+}
+
+func (es *EspService) GetInfo() (model.Wifi, error) {
+	err := es.serialService.ReadCommand("info")
+	if err != nil {
+		return model.Wifi{}, err
+	}
+	wifi := model.Wifi{}
+	for {
+
+		buf := strings.Clone(es.serialService.GetBuffer())
+		if strings.Contains(buf, string(START_INFO)) && strings.Contains(buf, string(END_INFO)) {
+			re := regexp.MustCompile(`\r?\n`)
+			x := re.ReplaceAllString(buf, " ")
+
+			re = regexp.MustCompile(`\\`)
+			x = re.ReplaceAllString(x, " ")
+
+			indexStart := strings.Index(x, string(START_INFO))
+			indexEnd := strings.Index(x, string(END_INFO))
+
+			x = (substr(x, indexStart, indexEnd-8))
+
+			x = strings.Replace(x, string(START_INFO), "", 1)
+			x = strings.Replace(x, string(END_INFO), "", 1)
+
+			fmt.Println("buf")
+			fmt.Println(x)
+
+			fmt.Println("x")
+			fmt.Println(x)
+
+			fmt.Println("optro x")
+			fmt.Println(x)
+
+			// in := []byte(x)
+
+			// err := json.Unmarshal(in, &wifi)
+			// if err != nil {
+			// 	fmt.Println("errou")
+			// 	return model.Wifi{}, err
+			// }
 
 			// wifi = model.Wifi{
 			// 	IndexStart: indexStart,

@@ -75,7 +75,7 @@ func (ss *SerialService) SerialMonitor() error {
 		if n > 0 {
 			result := string(buff[:n])
 
-			// fmt.Print(result)
+			fmt.Print(result)
 
 			ss.sb.WriteString(result)
 		}

@@ -47,6 +47,13 @@ func SetRoutes(
 	).Methods(http.MethodPost)
 
 	r.Handle(
+		"/info",
+		handlers.CompressHandler(
+			mw.HandlerError(handler.GetInfo),
+		),
+	).Methods(http.MethodGet)
+
+	r.Handle(
 		"/{port}/start",
 		handlers.CompressHandler(
 			mw.HandlerError(handler.StartEsp),

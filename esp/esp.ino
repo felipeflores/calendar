@@ -193,6 +193,8 @@ void loop() {
         Serial.end();
         Serial.begin(baudRate);
         Serial.println("Olha aqui");
+      } else if (stringOne == "info") {
+        getInfo();
       } else if (stringOne == "networks") {
         getNetworks();
         Serial.flush();
@@ -249,6 +251,30 @@ void getNetworks() {
     Serial.println("Nenhuma rede encontrada");
   }
   Serial.println("END_WIFI");
+}
+
+void getInfo() {
+  esp_chip_info_t chip_info;
+  esp_chip_info(&chip_info);
+  String chipId = String((uint32_t)ESP.getEfuseMac(), HEX);
+  Serial.println("START_INFO");
+  Serial.println("{ ");
+  Serial.print(" \"chip_id\": \"");
+  Serial.print(chipId.c_str());
+  Serial.println("\"} ");
+  Serial.println("END_INFO"); 
+  Serial.println("Hardware info");
+  Serial.printf("%d cores Wifi %s%s\n", chip_info.cores, (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
+   (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
+  Serial.printf("Silicon revision: %d\n", chip_info.revision);
+  Serial.printf("%dMB %s flash\n", spi_flash_get_chip_size()/(1024*1024),
+  (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embeded" : "external");
+   
+  //get chip id
+  
+  chipId.toUpperCase();
+   
+  Serial.printf("Chip id: %s\n", chipId.c_str());
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
