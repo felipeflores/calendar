@@ -5,6 +5,7 @@ const FullLayout = lazy(() => import("../layouts/FullLayout"));
 const Config = lazy(() => import("../screens/Config"));
 const Start = lazy(() => import("../screens/Start"));
 const Ports = lazy(() => import("../screens/Ports"));
+const Networks = lazy(() => import("../screens/Networks"));
 
 const ThemeRoutes = [
     {
@@ -16,7 +17,8 @@ const ThemeRoutes = [
                 path: "config", element: <Config />,
                 children: [
                     { path: "", element: <Start />, },
-                    { path: "ports", element: <Ports />, }
+                    { path: "ports", element: <Ports />, },
+                    { path: "networks", element: <Networks />, }
                 ]
             },
         ]

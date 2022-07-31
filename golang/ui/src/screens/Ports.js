@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
 import { getPorts } from "../service/port.service"
+import { start, doReset } from "../service/esp.service"
 
 import Steps from "../components/Steps"
 import Button from "../components/Button"
@@ -13,7 +14,9 @@ const INITAL_STATE = {
 }
 const Ports = () => {
     const history = useNavigate();
-    const next = () => {
+    const next = async () => {
+        await start(form.port)
+        await doReset()
         history('/config/networks');
     }
 
@@ -28,11 +31,18 @@ const Ports = () => {
         })();
     },[])
 
+    const change = (e) => {
+        setForm({
+            [e.target.name]: e.target.value
+        })
+    }
 
     return (
         <div>
             Portas Disponíveis
-            <select className="form-select" >
+            <select className="form-select" 
+                id="port" name="port"
+                onChange={change} >
                 <option selected>Selecione a porta do seu dispositivo</option>
                 {ports?.map((object, i) => <option key={i} value={object}>{object}</option>)}
             </select>

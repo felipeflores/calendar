@@ -29,7 +29,7 @@ const Wrapper = styled.div`
 const Wizzard = styled.div`
     position: relative;
     background: #fff;
-    height: 554px;
+    height: 400px;
     width: 738px;
     padding: 71px 93px 0;
     border-radius: 10px;

@@ -1,7 +1,9 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -49,14 +51,21 @@ func substr(input string, start int, length int) string {
 	return string(asRunes[start : start+length])
 }
 
+func (es *EspService) Reset() error {
+	err := es.serialService.ReadCommand("reset")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (es *EspService) GetNetworks() (model.Wifi, error) {
 	fmt.Println("GetNetworks")
-	time.Sleep(20 * time.Second)
 	err := es.serialService.ReadCommand("networks")
 	if err != nil {
 		return model.Wifi{}, err
 	}
-	var wifi model.Wifi
+	wifi := model.Wifi{}
 	for {
 
 		buf := strings.Clone(es.serialService.GetBuffer())
@@ -64,12 +73,30 @@ func (es *EspService) GetNetworks() (model.Wifi, error) {
 			indexStart := strings.Index(buf, string(START_WIFI))
 			indexEnd := strings.Index(buf, string(END_WIFI))
 
-			wifi = model.Wifi{
-				IndexStart: indexStart,
-				IndexEnd:   indexEnd,
-				Valor:      substr(buf, indexStart, indexEnd),
-				Output:     buf,
+			buf = (substr(buf, indexStart-4, indexEnd-10))
+
+			x := strings.Replace(buf, string(END_WIFI), "", 1)
+			x = strings.Replace(x, string(START_WIFI), "", 1)
+
+			re := regexp.MustCompile(`\r?\n`)
+			x = re.ReplaceAllString(x, " ")
+
+			fmt.Println(x)
+
+			in := []byte(x)
+
+			err := json.Unmarshal(in, &wifi)
+			if err != nil {
+				fmt.Println("errou")
+				return model.Wifi{}, err
 			}
+
+			// wifi = model.Wifi{
+			// 	IndexStart: indexStart,
+			// 	IndexEnd:   indexEnd,
+			// 	Valor:      substr(buf, indexStart, indexEnd),
+			// 	Output:     buf,
+			// }
 
 			startBuf := substr(buf, 0, indexStart)
 			endBuf := substr(buf, indexEnd+8, len(buf))

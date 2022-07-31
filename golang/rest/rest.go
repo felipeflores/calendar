@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"iot/pkg/ferrors"
 	"net/http"
 	"strconv"
 
@@ -54,4 +57,32 @@ func GetStr(r *http.Request, param string) (string, error) {
 		return "", errors.New("parameter not found")
 	}
 	return p, nil
+}
+
+func DeserializeJSON(r *http.Request, payload interface{}) error {
+	return ReadJSON(context.Background(), r, payload)
+}
+
+// ReadJSON decode JSON from body to payload
+func ReadJSON(ctx context.Context, r *http.Request, payload interface{}) error {
+	fmt.Println(fmt.Printf("BODY: %s", r.Body))
+
+	// b, err := io.ReadAll(r.Body)
+	b, err := ioutil.ReadAll(r.Body) //Go.1.15 and earlier
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+	err = json.Unmarshal(b, payload)
+	if err != nil {
+		fmt.Println("passou aqui e errou")
+		return ferrors.NewBadRequest(err)
+	}
+	// fmt.Println(fmt.Printf("sera q foi %v", payload))
+	// err = json.NewDecoder(r.Body).Decode(payload)
+	// if err != nil {
+	// 	return ferrors.NewBadRequest(err)
+	// }
+
+	return nil
 }

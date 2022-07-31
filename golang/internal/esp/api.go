@@ -40,10 +40,22 @@ func SetRoutes(
 	).Methods(http.MethodGet)
 
 	r.Handle(
+		"/networks",
+		handlers.CompressHandler(
+			mw.HandlerError(handler.SetNetworks),
+		),
+	).Methods(http.MethodPost)
+
+	r.Handle(
 		"/{port}/start",
 		handlers.CompressHandler(
 			mw.HandlerError(handler.StartEsp),
 		),
 	).Methods(http.MethodPost)
-
+	r.Handle(
+		"/reset",
+		handlers.CompressHandler(
+			mw.HandlerError(handler.Reset),
+		),
+	).Methods(http.MethodPost)
 }

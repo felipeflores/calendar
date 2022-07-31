@@ -5,6 +5,7 @@ import (
 	"iot/rest"
 	"net/http"
 
+	"iot/internal/esp/model"
 	"iot/internal/esp/service"
 )
 
@@ -31,6 +32,13 @@ func (h *EspHandler) StartEsp(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
+func (h *EspHandler) Reset(w http.ResponseWriter, r *http.Request) error {
+	err := h.es.Reset()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (h *EspHandler) GetNetworks(w http.ResponseWriter, r *http.Request) error {
 
@@ -43,4 +51,17 @@ func (h *EspHandler) GetNetworks(w http.ResponseWriter, r *http.Request) error {
 	// return ferrors.NewBadRequest(errors.New("Errou aqui"))
 	// w.WriteHeader(http.StatusOK)
 	return rest.SendJSON(w, wifi)
+}
+func (h *EspHandler) SetNetworks(w http.ResponseWriter, r *http.Request) error {
+
+	network := model.Network{}
+	err := rest.DeserializeJSON(r, &network)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(fmt.Sprintf("Retorno: %v", network))
+	// return ferrors.NewBadRequest(errors.New("Errou aqui"))
+	// w.WriteHeader(http.StatusOK)
+	return nil
 }

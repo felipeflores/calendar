@@ -223,9 +223,10 @@ void getNetworks() {
     Serial.print(countWifi);
     Serial.print(",\n");
 
+    String comma = "";
     Serial.print(" \"networks\": [ \n");
     for (int i = 0; i < countWifi; ++i) {
-      Serial.print("{ \n");
+      Serial.print(comma + "{ \n");
 
       Serial.print(" \"ssi\": \"");
       Serial.print(WiFi.SSID(i));
@@ -233,12 +234,13 @@ void getNetworks() {
 
       Serial.print(" \"rssi\": ");
       Serial.print(WiFi.RSSI(i));
-      Serial.print(",");
 
       if (WiFi.encryptionType(i) != WIFI_AUTH_OPEN) {
-        Serial.print(" \"encripted\": true, ");
+        Serial.print(",");
+        Serial.print(" \"encripted\": true ");
       }
-      Serial.print("}, \n");
+      Serial.print("} \n");
+      comma = ",";
     }
 
     Serial.print("] \n ");
