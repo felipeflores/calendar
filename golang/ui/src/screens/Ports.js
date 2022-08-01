@@ -17,7 +17,7 @@ const Ports = () => {
     const next = async () => {
         await start(form.port)
         await doReset()
-        history('/config/networks');
+        history('/config/info');
     }
 
     const [form, setForm] = useState(INITAL_STATE);

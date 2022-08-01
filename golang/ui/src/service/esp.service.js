@@ -10,6 +10,10 @@ export const doReset = async () => {
     return ports?.data
 }
 
+export const getInfo = async () => {
+    const networks = await api.get(`/v1/esp/info`)
+    return networks?.data
+}
 
 export const getNetworks = async () => {
     const networks = await api.get(`/v1/esp/networks`)

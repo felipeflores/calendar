@@ -21,3 +21,7 @@ type RequestNetwork struct {
 	Network  string `json:"network"`
 	Password string `json:"password"`
 }
+
+type Info struct {
+	ChipID string `json:"chip_id"`
+}

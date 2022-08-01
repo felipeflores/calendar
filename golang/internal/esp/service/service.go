@@ -93,7 +93,7 @@ func (es *EspService) GetNetworks() (model.Wifi, error) {
 				return model.Wifi{}, err
 			}
 
-			// wifi = model.Wifi{
+			// wifi = model.Wifi{|
 			// 	IndexStart: indexStart,
 			// 	IndexEnd:   indexEnd,
 			// 	Valor:      substr(buf, indexStart, indexEnd),
@@ -117,12 +117,12 @@ func (es *EspService) GetNetworks() (model.Wifi, error) {
 	return wifi, nil
 }
 
-func (es *EspService) GetInfo() (model.Wifi, error) {
+func (es *EspService) GetInfo() (model.Info, error) {
 	err := es.serialService.ReadCommand("info")
 	if err != nil {
-		return model.Wifi{}, err
+		return model.Info{}, err
 	}
-	wifi := model.Wifi{}
+	info := model.Info{}
 	for {
 
 		buf := strings.Clone(es.serialService.GetBuffer())
@@ -141,36 +141,12 @@ func (es *EspService) GetInfo() (model.Wifi, error) {
 			x = strings.Replace(x, string(START_INFO), "", 1)
 			x = strings.Replace(x, string(END_INFO), "", 1)
 
-			fmt.Println("buf")
-			fmt.Println(x)
+			in := []byte(x)
 
-			fmt.Println("x")
-			fmt.Println(x)
-
-			fmt.Println("optro x")
-			fmt.Println(x)
-
-			// in := []byte(x)
-
-			// err := json.Unmarshal(in, &wifi)
-			// if err != nil {
-			// 	fmt.Println("errou")
-			// 	return model.Wifi{}, err
-			// }
-
-			// wifi = model.Wifi{
-			// 	IndexStart: indexStart,
-			// 	IndexEnd:   indexEnd,
-			// 	Valor:      substr(buf, indexStart, indexEnd),
-			// 	Output:     buf,
-			// }
-
-			startBuf := substr(buf, 0, indexStart)
-			endBuf := substr(buf, indexEnd+8, len(buf))
-
-			var sb = strings.Builder{}
-			sb.WriteString(startBuf)
-			sb.WriteString(endBuf)
+			err := json.Unmarshal(in, &info)
+			if err != nil {
+				return model.Info{}, err
+			}
 
 			es.serialService.SetBuffer("")
 
@@ -179,5 +155,5 @@ func (es *EspService) GetInfo() (model.Wifi, error) {
 		time.Sleep(time.Second * 5)
 	}
 
-	return wifi, nil
+	return info, nil
 }
