@@ -3,9 +3,10 @@ package google
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"iot/pkg/google/model"
 	"net/http"
 	"os"
 
@@ -15,62 +16,73 @@ import (
 )
 
 type ClientGoogle struct {
-	client *http.Client
+	client  *http.Client
+	config  *oauth2.Config
+	tokFile string
 }
 
 func NewClientGoogle() *ClientGoogle {
-	b, err := ioutil.ReadFile("credentials.json")
+	return &ClientGoogle{
+		tokFile: "token.json",
+	}
+}
+
+func (c *ClientGoogle) Setup(ctx context.Context, credentials model.Credentials) (string, error) {
+	credentialsFileName := "credentials.json"
+
+	file, _ := json.MarshalIndent(credentials, "", " ")
+	_ = ioutil.WriteFile(credentialsFileName, file, 0644)
+
+	b, err := ioutil.ReadFile(credentialsFileName)
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		return "", errors.New(fmt.Sprintf("Unable to read client secret file: %v", err))
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
 	config, err := google.ConfigFromJSON(b, calendar.CalendarReadonlyScope)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		return "", errors.New(fmt.Sprintf("Unable to parse client secret file to config: %v", err))
 	}
-	client := getClient(config)
+	c.config = config
 
-	return &ClientGoogle{
-		client: client,
-	}
+	return c.generateURLAuth(), nil
 }
 
-// Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config) *http.Client {
-	// The file token.json stores the user's access and refresh tokens, and is
-	// created automatically when the authorization flow completes for the first
-	// time.
-	tokFile := "token.json"
-	tok, err := tokenFromFile(tokFile)
-	if err != nil {
-		tok = getTokenFromWeb(config)
-		saveToken(tokFile, tok)
-	}
-	return config.Client(context.Background(), tok)
+func (c *ClientGoogle) generateURLAuth() string {
+	return c.config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 }
 
-// Request a token from the web, then returns the retrieved token.
-func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the "+
-		"authorization code: \n%v\n", authURL)
-
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("Unable to read authorization code: %v", err)
-	}
-
-	tok, err := config.Exchange(context.TODO(), authCode)
+func (c *ClientGoogle) GenerateToken(ctx context.Context, authCode string) error {
+	tok, err := c.config.Exchange(ctx, authCode)
 	if err != nil {
-		log.Fatalf("Unable to retrieve token from web: %v", err)
+		return err
 	}
-	return tok
+
+	f, err := os.OpenFile(c.tokFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	err = json.NewEncoder(f).Encode(tok)
+	if err != nil {
+		return err
+	}
+
+	return c.GetClient()
+}
+
+func (c *ClientGoogle) GetClient() error {
+	tok, err := c.tokenFromFile()
+	if err != nil {
+		return err
+	}
+	c.client = c.config.Client(context.Background(), tok)
+	return nil
 }
 
 // Retrieves a token from a local file.
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
+func (c *ClientGoogle) tokenFromFile() (*oauth2.Token, error) {
+	f, err := os.Open(c.tokFile)
 	if err != nil {
 		return nil, err
 	}
@@ -78,15 +90,4 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
-}
-
-// Saves a token to a file path.
-func saveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		log.Fatalf("Unable to cache oauth token: %v", err)
-	}
-	defer f.Close()
-	json.NewEncoder(f).Encode(token)
 }

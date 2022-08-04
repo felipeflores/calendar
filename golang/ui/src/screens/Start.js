@@ -3,7 +3,6 @@ import styled from "styled-components";
 
 import { useNavigate } from "react-router-dom";
 
-import { getPorts } from "../service/port.service"
 
 import Steps from "../components/Steps"
 import Button from "../components/Button"
@@ -11,12 +10,9 @@ import Button from "../components/Button"
 const Start = () => {
     const history = useNavigate();
     const next = () => {
-        history('/config/ports');
+        history('/config/google/credentials');
     }
 
-    useEffect(() => {
-        console.log(getPorts())
-    },[])
 
 
     return (

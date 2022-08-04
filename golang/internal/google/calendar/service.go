@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"iot/internal/config"
 	"iot/pkg/automation"
 	"iot/pkg/google"
+	errorsGoogle "iot/pkg/google/errors"
 	"iot/pkg/mqtt"
 )
 
@@ -15,10 +15,10 @@ type CalendarService struct {
 	calendarGoogle    *google.CalendarGoogle
 	automationService *automation.AutomationService
 	mqttClient        *mqtt.MqttService
-	event             config.MqttEvent
+	event             mqtt.MqttEvent
 }
 
-func NewCalendarService(cg *google.CalendarGoogle, mqttClient *mqtt.MqttService, event config.MqttEvent) *CalendarService {
+func NewCalendarService(cg *google.CalendarGoogle, mqttClient *mqtt.MqttService, event mqtt.MqttEvent) *CalendarService {
 	return &CalendarService{
 		calendarGoogle:    cg,
 		automationService: automation.NewAutomationService(),
@@ -41,8 +41,13 @@ func (cs *CalendarService) GetEvent(ctx context.Context, currentEvent string) st
 	fmt.Println(fmt.Sprintf("Entrou nos events current=%s", currentEvent))
 	event, err := cs.calendarGoogle.Get(ctx)
 	if err != nil {
-		fmt.Printf("errou %s", err)
-		cs.mqttClient.Publish(cs.event.Calendar, "off")
+		_, ok := err.(*errorsGoogle.ErrNotConfigured)
+		if !ok {
+			fmt.Printf("errou %s", err)
+			cs.mqttClient.Publish(cs.event.Calendar, "off")
+		} else {
+			return currentEvent
+		}
 	}
 	fmt.Println("start", event.End.DateTime)
 	fmt.Println("start", event.End.TimeZone)

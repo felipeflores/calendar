@@ -136,7 +136,7 @@ func (es *EspService) GetInfo() (model.Info, error) {
 			indexStart := strings.Index(x, string(START_INFO))
 			indexEnd := strings.Index(x, string(END_INFO))
 
-			x = (substr(x, indexStart, indexEnd-8))
+			x = (substr(x, indexStart, indexEnd-indexStart))
 
 			x = strings.Replace(x, string(START_INFO), "", 1)
 			x = strings.Replace(x, string(END_INFO), "", 1)

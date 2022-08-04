@@ -14,7 +14,7 @@ type Config struct {
 	Service Service  `yaml:"service"`
 	Server  Server   `yaml:"server"`
 	Cors    corsInfo `yaml:"cors"`
-	Mqtt    Mqtt     `yaml:"mqtt"`
+	Debug   Debug    `yaml:"debug"`
 }
 
 type Service struct {
@@ -37,14 +37,8 @@ type corsInfo struct {
 	MaxAge         int      `yaml:"max_age"`
 }
 
-type Mqtt struct {
-	Broker   string    `yaml:"broker"`
-	Port     int       `yaml:"port"`
-	ClientID string    `yaml:"client_id"`
-	Event    MqttEvent `yaml:"events"`
-}
-type MqttEvent struct {
-	Calendar string `yaml:"calendar"`
+type Debug struct {
+	WebServer bool `yaml:"web_server"`
 }
 
 func LoadConfig(configFile string) (*Config, error) {

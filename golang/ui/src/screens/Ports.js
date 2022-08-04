@@ -27,7 +27,6 @@ const Ports = () => {
         (async () => {
             const p = await getPorts();
             setPorts(p);
-            console.log(p)
         })();
     },[])
 

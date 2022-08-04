@@ -11,7 +11,11 @@ type MqttService struct {
 	client mqtt.Client
 }
 
-func NewMqttService(clientID, brokerIp string, port int) (*MqttService, error) {
+func NewMqttService() *MqttService {
+	return &MqttService{}
+}
+
+func (m *MqttService) Setup(clientID, brokerIp string, port int) error {
 	options := mqtt.NewClientOptions()
 	options.AddBroker(fmt.Sprintf("tcp://%s:%d", brokerIp, port))
 
@@ -23,21 +27,23 @@ func NewMqttService(clientID, brokerIp string, port int) (*MqttService, error) {
 	client := mqtt.NewClient(options)
 	token := client.Connect()
 	if token.Wait() && token.Error() != nil {
-		return nil, errors.New("Error to get token")
+		return errors.New("Error to get token")
 	}
 
-	return &MqttService{
-		client: client,
-	}, nil
+	m.client = client
+
+	return nil
 }
 
 func (m *MqttService) Publish(topic, message string) {
 	//Publish 5 messages to /go-mqtt/sample at qos 1 and wait for the receipt
 	//from the server after sending each message
 
-	fmt.Printf("o que publicar %s %s", topic, message)
-	token := m.client.Publish(topic, 0, false, message)
-	token.Wait()
+	if m.client != nil {
+		fmt.Printf("o que publicar %s %s", topic, message)
+		token := m.client.Publish(topic, 0, false, message)
+		token.Wait()
+	}
 
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -13,6 +14,7 @@ import (
 	internalEsp "iot/internal/esp"
 	internalGoogle "iot/internal/google"
 	"iot/internal/google/calendar"
+	internalMqtt "iot/internal/mqtt"
 	internalPorts "iot/internal/ports"
 	"iot/pkg/google"
 	"iot/pkg/httpserver"
@@ -40,23 +42,33 @@ func main() {
 	mw := middleware.New()
 
 	clientGoogle := google.NewClientGoogle()
+	err = clientGoogle.GetClient()
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Sem token %v", err))
+	}
 	calendarGoogle := google.NewCalendarGoogle(clientGoogle)
 
-	mqttClient, err := mqtt.NewMqttService(c.Mqtt.ClientID, c.Mqtt.Broker, c.Mqtt.Port)
+	var mqttConfigFile string
+
+	flag.StringVar(&mqttConfigFile, "mqqtConfig", "mqtt.json", "json mqtt file path")
+	flag.Parse()
+
+	mqqtConfig, err := mqtt.LoadConfig(mqttConfigFile)
+	if err != nil {
+		log.Fatalf("Error on load config file %v", err)
+	}
+	mqttClient := mqtt.NewMqttService()
 	if err != nil {
 		panic(err)
 	}
-
+	err = mqttClient.Setup(mqqtConfig.ClientID, mqqtConfig.Broker, mqqtConfig.Port)
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Erro setup mqtt %v", err))
+	}
 	// Init the mux router
 	router := mux.NewRouter()
 
 	rest.SetupRoutes(router)
-
-	internalAdmin.NewAdminApi(internalAdmin.Config{
-		Router:         router,
-		Middleware:     mw,
-		CalendarGoogle: calendarGoogle,
-	})
 
 	internalPorts.NewPortApi(internalPorts.Config{
 		Router:     router,
@@ -71,11 +83,23 @@ func main() {
 		SerialPort: serialService,
 	})
 
-	service := calendar.NewCalendarService(calendarGoogle, mqttClient, c.Mqtt.Event)
+	internalMqtt.NewMqttApi(internalMqtt.Config{
+		Router:     router,
+		Middleware: mw,
+		Mqqt:       mqttClient,
+	})
 
-	// go service.GetEvents()
+	internalAdmin.NewAdminApi(internalAdmin.Config{
+		Router:         router,
+		Middleware:     mw,
+		CalendarGoogle: calendarGoogle,
+	})
 
-	internalGoogle.NewGoogle(router, mw, calendarGoogle, service)
+	service := calendar.NewCalendarService(calendarGoogle, mqttClient, mqqtConfig.Event)
+
+	go service.GetEvents()
+
+	internalGoogle.NewGoogle(router, mw, calendarGoogle, service, clientGoogle)
 
 	// go httpserver.Start()
 

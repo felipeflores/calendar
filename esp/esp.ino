@@ -31,6 +31,7 @@ const char* password =  "";
 //Mqqt
 const char* mqttServer = "";
 int mqttPort = 0;
+const char* topic = "";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -59,7 +60,7 @@ void setup() {
     Serial.println("Existe o arquivo");
     readVariables(SPIFFS);
     if (ssid != "" && password != "" &&
-        mqttServer != "" && mqttPort > 0) {
+        mqttServer != "" && mqttPort > 0 && topic != "") {
       alreadConfigured = true;
     }
   }
@@ -167,7 +168,7 @@ void setup() {
       }
     }
     if (client.connected()) {
-      client.subscribe("felipe-casa/calendar");
+      client.subscribe(topic);
     }
 
     delay(1000);
@@ -288,7 +289,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
   // Changes the output state according to the message
-  if (String(topic) == "felipe-casa/calendar") {
+  if (String(topic) == topic) {
     Serial.print("Changing output to ");
     if (messageTemp == "on") {
       Serial.println("Relay ON");
@@ -307,7 +308,7 @@ boolean existConfigFile(fs::FS &fs) {
 
   File file = fs.open(CONFIG_FILE);
   if (!file || file.isDirectory()) {
-    Serial.println("− failed to open file for reading");
+    Serial.println(" failed to open file for reading");
     return false;
   }
   return true;
@@ -317,22 +318,22 @@ void initConfigFile(fs::FS &fs) {
 
   File file = fs.open(CONFIG_FILE, FILE_WRITE);
   if (!file) {
-    Serial.println("− failed to open file for initialize");
+    Serial.println(" failed to open file for initialize");
     return;
   }
   if (file.print("")) {
-    Serial.println("− inicializado");
+    Serial.println(" inicializado");
   } else {
-    Serial.println("− init failed");
+    Serial.println(" init failed");
   }
 }
 
 void resetConfig(fs::FS &fs) {
   Serial.printf("Deleting file: %s\r\n", CONFIG_FILE);
   if (fs.remove(CONFIG_FILE)) {
-    Serial.println("− file deleted");
+    Serial.println(" file deleted");
   } else {
-    Serial.println("− delete failed");
+    Serial.println(" delete failed");
   }
   initConfigFile(fs);
 }
@@ -341,16 +342,16 @@ void addVariable(fs::FS &fs, const char * variable) {
   Serial.printf("Appending to file: %s\r\n", CONFIG_FILE);
   File file = fs.open(CONFIG_FILE, FILE_APPEND);
   if (file.print(variable)) {
-    Serial.println("− message appended");
+    Serial.println(" message appended");
   } else {
-    Serial.println("− append failed");
+    Serial.println(" append failed");
   }
 }
 
 void readVariables(fs::FS &fs) {
   File file = fs.open(CONFIG_FILE);
   if (!file) {
-    Serial.println("− failed to open file for initialize");
+    Serial.println(" failed to open file for initialize");
     return;
   }
   bool existContent = false;
@@ -384,6 +385,8 @@ void readVariables(fs::FS &fs) {
         mqttServer = valueLine[1].c_str();
       } else if (valueLine[0] == "MQTT_PORT") {
         mqttPort = valueLine[1].toInt();
+      } else if (valueLine[0] == "MQTT_EVENT_CALENDAR") {
+        topic = valueLine[1].c_str();
       }
     }
   }
@@ -418,8 +421,8 @@ void split(int arraySize, String str, char key, String* strs) {
 void deleteFile(fs::FS &fs, const char * path) {
   Serial.printf("Deleting file: %s\r\n", path);
   if (fs.remove(path)) {
-    Serial.println("− file deleted");
+    Serial.println(" file deleted");
   } else {
-    Serial.println("− delete failed");
+    Serial.println(" delete failed");
   }
 }
